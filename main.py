@@ -1,5 +1,6 @@
 
-ukoly = []
+ukoly = ["Úkol 1 - Uklidit", "Úkol 2 - Vytřít"]
+
 def pridat_ukol():
     nazev_ukolu = str(input("Zadejte název úkolu: "))
     popis_ukolu = str(input("Zadejte popis úkolu: "))
@@ -9,14 +10,37 @@ def pridat_ukol():
 
 
 def zobrazit_ukoly():
-    print(f"\nSeznam úkolů:")
-    for (index, ukol) in enumerate(ukoly, start=1):
-        print(f"{index} - {ukol}")
-    print("")
+    if len(ukoly) == 0:
+        print("Seznam úkolů je prázdný. Začněte přidáním úkolu volbou č. 1.\n")
+    else:
+        print(f"\nSeznam úkolů:")
+        for (index, ukol) in enumerate(ukoly, start=1):
+            print(f"{index}. {ukol}")
+        print("")
 
 
 def odstranit_ukol():
-    pass
+    if len(ukoly) == 0:
+        print("Seznam úkolů je prázdný. Začněte přidáním úkolu volbou č. 1.\n")
+    else:
+        print(f"\nSeznam úkolů:")
+        for (index, ukol) in enumerate(ukoly, start=1):
+            print(f"{index}. {ukol}")
+        print("")
+
+    user_choice = input("Zadejte číslo úkolu, který chcete odstranit: ")
+    try:
+        user_choice_int = int(user_choice)
+        if user_choice_int in range(len(ukoly)+1):
+            # user_choice_int -= 1
+            print(f"Odstranil jsem položku '{ukoly[user_choice_int-1]}' ze seznamu úkolů.\n")
+            ukoly.pop(user_choice_int-1)
+
+        else:
+            print("Zadal jsi číslo mimo rozsah seznamu úkolů.\n")
+    except ValueError:
+        print("Nezadal jsi číselnou hodnotu.\n")
+
 
 
 def hlavni_menu():
@@ -37,7 +61,7 @@ def hlavni_menu():
             if user_choice_int == 3:
                 odstranit_ukol()
             if user_choice_int == 4:
-                print("Díky za použití mého programu. Nyní ukončuji program.")
+                print("Díky za použití mého programu. Ukončuji program.")
                 task_run = False
         else:
             print("Vyber číslo mezi 1 a 4.\n")
