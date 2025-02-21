@@ -37,20 +37,20 @@ def odstranit_ukol():
             print(f"{index}. {ukol}")
         print("")
 
-    user_choice = input("Zadejte číslo úkolu, který chcete odstranit: ")
-    try:
-        user_choice_int = int(user_choice)
-        if user_choice_int in range(len(ukoly) + 1):
-            # user_choice_int -= 1
-            print(
-                f"Odstranil jsem položku '{ukoly[user_choice_int-1]}' ze seznamu úkolů.\n"
-            )
-            ukoly.pop(user_choice_int - 1)
+        user_choice = input("Zadejte číslo úkolu, který chcete odstranit: ")
+        try:
+            user_choice_int = int(user_choice)
+            if user_choice_int in range(len(ukoly) + 1):
+                # user_choice_int -= 1
+                print(
+                    f"Odstranil jsem položku '{ukoly[user_choice_int-1]}' ze seznamu úkolů.\n"
+                )
+                ukoly.pop(user_choice_int - 1)
 
-        else:
-            print("Zadal jsi číslo mimo rozsah seznamu úkolů.\n")
-    except ValueError:
-        print("Nezadal jsi číselnou hodnotu.\n")
+            else:
+                print("Zadal jsi číslo mimo rozsah seznamu úkolů.\n")
+        except ValueError:
+            print("Nezadal jsi číselnou hodnotu.\n")
 
 
 def hlavni_menu():
@@ -74,7 +74,7 @@ def hlavni_menu():
                 print("Díky za použití mého programu. Ukončuji program.")
                 task_run = False
         else:
-            print("Vyber číslo mezi 1 a 4.\n")
+            print("Vybral si číslo mimo daný rozsah. Vyber číslo mezi 1 a 4.\n")
     except ValueError:
         print("Nezadal si platné číslo.\n")
 
