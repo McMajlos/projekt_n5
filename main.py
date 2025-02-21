@@ -72,3 +72,4 @@ task_run = True
 while task_run:
     hlavni_menu()
 
+@{}
