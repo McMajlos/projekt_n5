@@ -1,4 +1,48 @@
-import  mysql.connector
+import mysql.connector
+
+
+def pripojeni_db():
+    try:
+        conn = mysql.connector.connect(
+            host="localhost", user="root", password="engeto", database="engeto"
+        )
+        print("Připojení k databázi bylo úspěšné.")
+    except mysql.connector.Error as err:
+        print(f"Chyba při připojování: {err}")
+
+
+# Použití funkce
+conn, cursor = pripojeni_db()
+
+
+def vytvoreni_tabulky():
+    try:
+        cursor.execute("SHOW TABLES LIKE 'ukoly1'")
+        table_exists = cursor.fetchone()
+
+        if table_exists:
+            print("Tabulka 'ukoly1' již existuje, není potřeba ji vytvářet.")
+        else:
+            cursor.execute(
+                """
+                CREATE TABLE ukoly1 (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    nazev VARCHAR(100),
+                    popis TEXT,
+                    stav ENUM('Nezahájeno','Probíhá','Hotovo'), 
+                    datum_vytvoreni TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            conn.commit()
+            print("Tabulka 'ukoly1' byla úspěšně vytvořena.")
+
+    except mysql.connector.Error as err:
+        print(f"Chyba při vytváření tabulky: {err}")
+    finally:
+        cursor.close()
+        conn.close()
+
 
 ukoly = ["Úkol 1 - Uklidit", "Úkol 2 - Vytřít"]
 
@@ -15,9 +59,17 @@ def pridat_ukol():
     if popis_ukolu.strip() == "":
         popis_ukolu = "Bez popisu."
         print("Bez popisu.\n")
-    ukol_s_popisem = f"{nazev_ukolu} - {popis_ukolu}"
-    ukoly.append(ukol_s_popisem)
-    print(f"Úkol '{nazev_ukolu}' byl přidán.\n")
+
+
+    try:
+        cursor.execute(
+            "INSERT INTO ukoly1 (nazev, popis) VALUES (%s, %s)",
+            (nazev_ukolu, popis_ukolu),
+        )
+        conn.commit()
+        print(f"Úkol '{nazev_ukolu}' byl přidán.\n")
+    except mysql.connector.Error as err:
+        print(f"Chyba při vkládání dat: {err}")
 
 
 def zobrazit_ukoly():
