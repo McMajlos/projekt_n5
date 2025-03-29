@@ -14,16 +14,17 @@ def pripojeni_db():
 
 
 def vytvoreni_tabulky():
+    """Vytvoří tabulku 'ukoly', pokud ještě neexistuje."""
     try:
-        cursor.execute("SHOW TABLES LIKE 'ukoly1'")
+        cursor.execute("SHOW TABLES LIKE 'ukoly'")
         table_exists = cursor.fetchone()
 
         if table_exists:
-            print("Tabulka 'ukoly1' již existuje, není potřeba ji vytvářet.")
+            print("Tabulka 'ukoly' již existuje, není potřeba ji vytvářet.")
         else:
             cursor.execute(
                 """
-                CREATE TABLE ukoly1 (
+                CREATE TABLE ukoly (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     nazev VARCHAR(100),
                     popis TEXT,
@@ -33,7 +34,7 @@ def vytvoreni_tabulky():
                 """
             )
             conn.commit()
-            print("Tabulka 'ukoly1' byla úspěšně vytvořena.")
+            print("Tabulka 'ukoly' byla úspěšně vytvořena.")
 
     except mysql.connector.Error as err:
         print(f"Chyba při vytváření tabulky: {err}")
@@ -43,6 +44,7 @@ def vytvoreni_tabulky():
 
 
 def pridat_ukol():
+    """Přidá úkol do databáze. Používám ve funkci hlavni_menu()"""
     while True:
         nazev_ukolu = str(input("Zadejte název úkolu: "))
         if nazev_ukolu.strip() == "":
@@ -57,7 +59,7 @@ def pridat_ukol():
 
     try:
         cursor.execute(
-            "INSERT INTO ukoly1 (nazev, popis) VALUES (%s, %s)",
+            "INSERT INTO ukoly (nazev, popis) VALUES (%s, %s)",
             (nazev_ukolu, popis_ukolu),
         )
         conn.commit()
@@ -70,7 +72,7 @@ def zobrazit_ukoly():
     """Zobrazí úkoly, které mají stav "Dokončeno" nebo "Probíhá"."""
     try:
         cursor.execute(
-            "SELECT * FROM ukoly1 WHERE stav = 'Nezahájeno' OR stav = 'Probíhá'"
+            "SELECT * FROM ukoly WHERE stav = 'Nezahájeno' OR stav = 'Probíhá'"
         )
         vysledky = cursor.fetchall()
 
@@ -107,14 +109,12 @@ def zobrazit_ukoly():
             )
         print(hlavicka_radek.rstrip(" | "))
 
-        # Výpis oddělovače – odstraníme poslední "-+-" pomocí slicing
         oddelovac = ""
         for sirka_sloupce in sirky:
             oddelovac += "-" * sirka_sloupce + "-+-"
-        oddelovac = oddelovac[:-3]  # odstraníme poslední '-+-'
+        oddelovac = oddelovac[:-3]
         print(oddelovac)
 
-        # Výpis dat
         for radek in data:
             radek_text = ""
             for hodnota_index in range(len(radek)):
@@ -128,7 +128,7 @@ def zobrazit_ukoly():
 def zobrazit_vsechny_ukoly():
     """Zobrazí všechny úkoly v databázi. Používám ve funkci aktualizovat_ukol(), odstranit_ukol()"""
     try:
-        cursor.execute("SELECT * FROM ukoly1")
+        cursor.execute("SELECT * FROM ukoly")
         vysledky = cursor.fetchall()
 
         if len(vysledky) == 0:
@@ -162,14 +162,12 @@ def zobrazit_vsechny_ukoly():
             )
         print(hlavicka_radek.rstrip(" | "))
 
-        # Výpis oddělovače – odstraníme poslední "-+-" pomocí slicing
         oddelovac = ""
         for sirka_sloupce in sirky:
             oddelovac += "-" * sirka_sloupce + "-+-"
-        oddelovac = oddelovac[:-3]  # odstraníme poslední '-+-'
+        oddelovac = oddelovac[:-3]
         print(oddelovac)
 
-        # Výpis dat
         for radek in data:
             radek_text = ""
             for hodnota_index in range(len(radek)):
@@ -181,8 +179,9 @@ def zobrazit_vsechny_ukoly():
 
 
 def aktualizovat_ukol():
+    """Aktualizuje stav úkolu v databázi."""
     try:
-        cursor.execute("SELECT * FROM ukoly1")
+        cursor.execute("SELECT * FROM ukoly")
         ukoly = cursor.fetchall()
 
         if len(ukoly) == 0:
@@ -200,16 +199,14 @@ def aktualizovat_ukol():
                 print("Neplatný vstup. Zadejte číslo.")
                 continue
 
-            # Kontrola existence úkolu
-            cursor.execute("SELECT * FROM ukoly1 WHERE id = %s", (id_ukolu,))
+            cursor.execute("SELECT * FROM ukoly WHERE id = %s", (id_ukolu,))
             ukol = cursor.fetchone()
 
             if ukol:
-                break  # Úkol existuje, končíme cyklus
+                break 
             else:
                 print(f"Úkol s ID {id_ukolu} nebyl nalezen. Zkuste to znovu.")
 
-        # Výběr nového stavu
         while True:
             print("Vyberte nový stav úkolu:")
             print("1. Probíhá")
@@ -225,9 +222,8 @@ def aktualizovat_ukol():
             else:
                 print("Neplatná volba. Zkuste to znovu.")
 
-        # Aktualizace stavu úkolu v databázi
         cursor.execute(
-            "UPDATE ukoly1 SET stav = %s WHERE id = %s",
+            "UPDATE ukoly SET stav = %s WHERE id = %s",
             (novy_stav, id_ukolu),
         )
         conn.commit()
@@ -238,9 +234,10 @@ def aktualizovat_ukol():
 
 
 def odstranit_ukol():
+    """Odstraní úkol z databáze."""
     print("\nZobrazuji všechny úkoly, které jsou v databázi:")
     try:
-        cursor.execute("SELECT * FROM ukoly1")
+        cursor.execute("SELECT * FROM ukoly")
         ukoly = cursor.fetchall()
 
         if len(ukoly) == 0:
@@ -256,17 +253,16 @@ def odstranit_ukol():
                 print("Neplatný vstup. Zadejte číslo.")
                 continue
 
-            # Kontrola existence úkolu
-            cursor.execute("SELECT * FROM ukoly1 WHERE id = %s", (id_ukolu,))
+            cursor.execute("SELECT * FROM ukoly WHERE id = %s", (id_ukolu,))
             ukol = cursor.fetchone()
 
             if ukol:
-                break  # Úkol existuje, končíme cyklus
+                break
             else:
                 print(f"Úkol s ID {id_ukolu} nebyl nalezen. Zkuste to znovu.")
 
         cursor.execute(
-            "DELETE FROM ukoly1 WHERE id = %s",
+            "DELETE FROM ukoly WHERE id = %s",
             (id_ukolu,),
         )
         conn.commit()
@@ -277,6 +273,7 @@ def odstranit_ukol():
 
 
 def hlavni_menu():
+    """Hlavní menu programu."""
     global task_run
     print("")
     print("Správce úkolů - Hlavní menu")
