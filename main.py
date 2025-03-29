@@ -1,3 +1,5 @@
+import  mysql.connector
+
 ukoly = ["Úkol 1 - Uklidit", "Úkol 2 - Vytřít"]
 
 
