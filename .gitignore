@@ -7,3 +7,5 @@
 pokus.py
 .idea/.gitignore
 main copy.py
+.pytest_cache
+__pycache__
