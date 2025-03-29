@@ -14,7 +14,7 @@ def pripojeni_db():
 
 
 def vytvoreni_tabulky():
-    """Vytvoří tabulku 'ukoly', pokud ještě neexistuje."""
+    """Vytvoří tabulku 'ukoly', pokud ještě neexistuje."""    
     try:
         cursor.execute("SHOW TABLES LIKE 'ukoly'")
         table_exists = cursor.fetchone()
@@ -26,21 +26,18 @@ def vytvoreni_tabulky():
                 """
                 CREATE TABLE ukoly (
                     id INT AUTO_INCREMENT PRIMARY KEY,
-                    nazev VARCHAR(100),
-                    popis TEXT,
-                    stav ENUM('Nezahájeno','Probíhá','Hotovo'), 
+                    nazev VARCHAR(50),
+                    popis VARCHAR(500),
+                    stav VARCHAR(100) DEFAULT 'Nezahájeno', 
                     datum_vytvoreni TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
                 """
             )
             conn.commit()
-            print("Tabulka 'ukoly' byla úspěšně vytvořena.")
+            print("Tabulka 'ukoly1' byla úspěšně vytvořena.")
 
     except mysql.connector.Error as err:
         print(f"Chyba při vytváření tabulky: {err}")
-    finally:
-        cursor.close()
-        conn.close()
 
 
 def pridat_ukol():
@@ -203,7 +200,7 @@ def aktualizovat_ukol():
             ukol = cursor.fetchone()
 
             if ukol:
-                break 
+                break
             else:
                 print(f"Úkol s ID {id_ukolu} nebyl nalezen. Zkuste to znovu.")
 
@@ -307,7 +304,10 @@ def hlavni_menu():
 
 # Připojení k databázi a vytvoření tabulky
 conn, cursor = pripojeni_db()
+vytvoreni_tabulky()
 
+
+# Spuštění hlavního menu
 task_run = True
 while task_run:
     hlavni_menu()
