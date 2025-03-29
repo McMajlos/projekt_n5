@@ -44,9 +44,6 @@ def vytvoreni_tabulky():
         conn.close()
 
 
-ukoly = ["Úkol 1 - Uklidit", "Úkol 2 - Vytřít"]
-
-
 def pridat_ukol():
     while True:
         nazev_ukolu = str(input("Zadejte název úkolu: "))
@@ -60,7 +57,6 @@ def pridat_ukol():
         popis_ukolu = "Bez popisu."
         print("Bez popisu.\n")
 
-
     try:
         cursor.execute(
             "INSERT INTO ukoly1 (nazev, popis) VALUES (%s, %s)",
@@ -73,8 +69,11 @@ def pridat_ukol():
 
 
 def zobrazit_ukoly():
+    """Zobrazí úkoly, které mají stav "Dokončeno" nebo "Probíhá"."""
     try:
-        cursor.execute("SELECT * FROM ukoly1 WHERE stav = 'Nezahájeno' OR stav = 'Probíhá'")
+        cursor.execute(
+            "SELECT * FROM ukoly1 WHERE stav = 'Dokončeno' OR stav = 'Probíhá'"
+        )
         vysledky = cursor.fetchall()
 
         if len(vysledky) == 0:
@@ -103,15 +102,74 @@ def zobrazit_ukoly():
 
         hlavicka_radek = ""
         for nazev_sloupce_index in range(len(hlavicky)):
-            hlavicka_radek += hlavicky[nazev_sloupce_index].ljust(sirky[nazev_sloupce_index]) + " | "
+            hlavicka_radek += (
+                hlavicky[nazev_sloupce_index].ljust(sirky[nazev_sloupce_index]) + " | "
+            )
         print(hlavicka_radek.rstrip(" | "))
 
+        # Výpis oddělovače – odstraníme poslední "-+-" pomocí slicing
         oddelovac = ""
         for sirka_sloupce in sirky:
             oddelovac += "-" * sirka_sloupce + "-+-"
-        oddelovac = oddelovac[:-3]
+        oddelovac = oddelovac[:-3]  # odstraníme poslední '-+-'
         print(oddelovac)
 
+        # Výpis dat
+        for radek in data:
+            radek_text = ""
+            for hodnota_index in range(len(radek)):
+                radek_text += radek[hodnota_index].ljust(sirky[hodnota_index]) + " | "
+            print(radek_text.rstrip(" | "))
+
+    except mysql.connector.Error as chyba:
+        print("Chyba při načítání dat:", chyba)
+
+
+def zobrazit_vsechny_ukoly():
+    """Zobrazí všechny úkoly v databázi. Používám ve funkci aktualizovat_ukol(), odstranit_ukol()"""
+    try:
+        cursor.execute("SELECT * FROM ukoly1")
+        vysledky = cursor.fetchall()
+
+        if len(vysledky) == 0:
+            print("Žádné úkoly nebyly nalezeny.")
+            return
+
+        data = []
+        for radek in vysledky:
+            idcko = str(radek[0])
+            nazev = str(radek[1])
+            popis = str(radek[2])
+            stav = str(radek[3])
+            datum = radek[4].strftime("%d.%m.%Y %H:%M:%S")
+            data.append((idcko, nazev, popis, stav, datum))
+
+        hlavicky = ("ID", "Název", "Popis", "Stav", "Vytvořeno")
+
+        sirky = []
+        for sloupec_index in range(len(hlavicky)):
+            nejdelsi_delka = len(hlavicky[sloupec_index])
+            for radek in data:
+                delka_hodnoty = len(radek[sloupec_index])
+                if delka_hodnoty > nejdelsi_delka:
+                    nejdelsi_delka = delka_hodnoty
+            sirky.append(nejdelsi_delka)
+
+        hlavicka_radek = ""
+        for nazev_sloupce_index in range(len(hlavicky)):
+            hlavicka_radek += (
+                hlavicky[nazev_sloupce_index].ljust(sirky[nazev_sloupce_index]) + " | "
+            )
+        print(hlavicka_radek.rstrip(" | "))
+
+        # Výpis oddělovače – odstraníme poslední "-+-" pomocí slicing
+        oddelovac = ""
+        for sirka_sloupce in sirky:
+            oddelovac += "-" * sirka_sloupce + "-+-"
+        oddelovac = oddelovac[:-3]  # odstraníme poslední '-+-'
+        print(oddelovac)
+
+        # Výpis dat
         for radek in data:
             radek_text = ""
             for hodnota_index in range(len(radek)):
@@ -152,8 +210,9 @@ def hlavni_menu():
     print("Správce úkolů - Hlavní menu")
     print("1. Přidat nový úkol")
     print("2. Zobrazit všechny úkoly")
-    print("3. Odstranit úkol")
-    print("4. Konec programu")
+    print("3. Aktualizovat úkol")
+    print("4. Odstranit úkol")
+    print("5. Konec programu")
     user_choice = input("Vyberte možnost 1-4: ")
     try:
         user_choice_int = int(user_choice)
@@ -163,8 +222,10 @@ def hlavni_menu():
             if user_choice_int == 2:
                 zobrazit_ukoly()
             if user_choice_int == 3:
-                odstranit_ukol()
+                aktualizovat_ukol()
             if user_choice_int == 4:
+                odstranit_ukol()
+            if user_choice_int == 5:
                 print("Díky za použití mého programu. Ukončuji program.")
                 task_run = False
         else:
