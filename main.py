@@ -14,7 +14,7 @@ def pripojeni_db():
 
 
 def vytvoreni_tabulky():
-    """Vytvoří tabulku 'ukoly', pokud ještě neexistuje."""    
+    """Vytvoří tabulku 'ukoly', pokud ještě neexistuje."""
     try:
         cursor.execute("SHOW TABLES LIKE 'ukoly'")
         table_exists = cursor.fetchone()
@@ -34,26 +34,15 @@ def vytvoreni_tabulky():
                 """
             )
             conn.commit()
-            print("Tabulka 'ukoly1' byla úspěšně vytvořena.")
+            print("Tabulka 'ukoly' byla úspěšně vytvořena.")
 
     except mysql.connector.Error as err:
         print(f"Chyba při vytváření tabulky: {err}")
 
 
-def pridat_ukol():
-    """Přidá úkol do databáze. Používám ve funkci hlavni_menu()"""
-    while True:
-        nazev_ukolu = str(input("Zadejte název úkolu: "))
-        if nazev_ukolu.strip() == "":
-            print("Název úkolu nemůže být prázdný.")
-        else:
-            break
-
-    popis_ukolu = str(input("Zadejte popis úkolu: "))
-    if popis_ukolu.strip() == "":
-        popis_ukolu = "Bez popisu."
-        print("Bez popisu.")
-
+def pridat_ukol(conn, nazev_ukolu, popis_ukolu):
+    """Přidá úkol do databáze s již zadanými hodnotami."""
+    cursor = conn.cursor()
     try:
         cursor.execute(
             "INSERT INTO ukoly (nazev, popis) VALUES (%s, %s)",
@@ -280,34 +269,48 @@ def hlavni_menu():
     print("4. Odstranit úkol")
     print("5. Konec programu")
     user_choice = input("Vyberte možnost 1-5: ")
+    
     try:
         user_choice_int = int(user_choice)
         if 1 <= user_choice_int <= 5:
             if user_choice_int == 1:
-                pridat_ukol()
-            if user_choice_int == 2:
+                # Získání vstupů od uživatele mimo funkci pro vkládání
+                nazev = input("Zadejte název úkolu: ").strip()
+                while not nazev:
+                    print("Název úkolu nemůže být prázdný.")
+                    nazev = input("Zadejte název úkolu: ").strip()
+                
+                popis = input("Zadejte popis úkolu: ").strip()
+                if not popis:
+                    popis = "Bez popisu."
+                    print("Používám výchozí hodnotu: 'Bez popisu.'")
+                
+                # Volání funkce pro přidání úkolu s předanými hodnotami
+                pridat_ukol(conn, nazev, popis)
+            
+            elif user_choice_int == 2:
                 zobrazit_ukoly()
-            if user_choice_int == 3:
+            elif user_choice_int == 3:
                 aktualizovat_ukol()
-            if user_choice_int == 4:
+            elif user_choice_int == 4:
                 odstranit_ukol()
-            if user_choice_int == 5:
+            elif user_choice_int == 5:
                 print("Díky za použití mého programu. Ukončuji program.")
                 cursor.close()
                 conn.close()
                 task_run = False
         else:
-            print("Vybral si číslo mimo daný rozsah. Vyber číslo mezi 1 a 4.")
+            print("Vybral sis číslo mimo daný rozsah. Vyber číslo mezi 1 a 5.")
     except ValueError:
-        print("Nezadal si platné číslo.")
+        print("Nezadal sis platné číslo.")
 
 
-# Připojení k databázi a vytvoření tabulky
-conn, cursor = pripojeni_db()
-vytvoreni_tabulky()
+if __name__ == "__main__":
+    # Připojení k databázi a vytvoření tabulky
+    conn, cursor = pripojeni_db()
+    vytvoreni_tabulky()
 
-
-# Spuštění hlavního menu
-task_run = True
-while task_run:
-    hlavni_menu()
+    # Spuštění hlavního menu
+    task_run = True
+    while task_run:
+        hlavni_menu()
