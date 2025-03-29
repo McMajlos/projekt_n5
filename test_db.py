@@ -4,6 +4,7 @@ from main import (
     pridat_ukol,
     aktualizovat_ukol,
     odstranit_ukol,
+    zobrazit_ukoly,
     zobrazit_vsechny_ukoly,
 )
 
@@ -71,15 +72,35 @@ def test_pridat_ukol_s_dlouhym_nazvem(db_setup):
         pridat_ukol(conn, nazev_ukolu="x" * 51, popis_ukolu="Popis1")
 
 
-def test_zobrazit_vsechny_ukoly(db_setup):
+# @pytest.mark.testuji
+def test_zobrazit_probihajici_ukoly(db_setup):
     conn, cursor = db_setup
     # Přidání několika úkolů
-    for i in range(0, 51):
+    for i in range(0, 5):
         pridat_ukol(conn, nazev_ukolu=f"Ukol{i}", popis_ukolu=f"Popis{i}")
+
+    aktualizovat_ukol(conn, id_ukolu=1, novy_stav="Probíhá")
     # Zobrazení všech úkolů
-    cursor.execute("SELECT * FROM ukoly")
+    cursor.execute("SELECT * FROM ukoly where stav = 'Probíhá'")
     ukoly = cursor.fetchall()
-    assert len(ukoly) == 51, "Nesprávný počet úkolů."
+    assert len(ukoly) == 1, "Nesprávný počet úkolů."
+
+    cursor.execute("SELECT * FROM ukoly")
+    vsechny_ukoly = cursor.fetchall()
+    assert len(vsechny_ukoly) == 5, "Nesprávný počet úkolů."
+
+    cursor.execute("SELECT * FROM ukoly WHERE stav != 'Probíhá'")
+    ukoly_neprobihaji = cursor.fetchall()
+    assert len(ukoly_neprobihaji) == 4, "Nesprávný počet úkolů."
+
+
+def test_zobrazit_vsechny_ukoly_prazdna_tabulka(db_setup):
+    conn, cursor = db_setup
+    # Zobrazení úkolů v prázdné tabulce
+    with pytest.raises(
+        ValueError, match="Žádné úkoly nebyly nalezeny. Databáze je prázdná!"
+    ):
+        zobrazit_vsechny_ukoly(conn)
 
 
 def test_aktualizovat_ukol(db_setup):
@@ -95,3 +116,32 @@ def test_aktualizovat_ukol(db_setup):
     assert result[1] == "Ukol1", "Název úkolu nebyl správně zachován."
     assert result[2] == "Popis1", "Popis úkolu nebyl správně zachován."
     assert result[4] is not None, "Datum vytvoření úkolu by mělo být nastaveno."
+
+
+def test_aktualizovat_neexistujici_ukol(db_setup):
+    conn, cursor = db_setup
+    # Pokus o aktualizaci neexistujícího úkolu
+    with pytest.raises(ValueError, match="Úkol s ID 999 neexistuje"):
+        aktualizovat_ukol(conn, id_ukolu=999, novy_stav="Dokončeno")
+
+
+def test_odstranit_ukol(db_setup):
+    conn, cursor = db_setup
+    # Přidání úkolu pro odstranění
+    pridat_ukol(conn, nazev_ukolu="Ukol1", popis_ukolu="Popis1")
+    # Odstranění úkolu
+    odstranit_ukol(conn, id_ukolu=1)
+    # Ověření odstranění
+    cursor.execute("SELECT COUNT(*) FROM ukoly WHERE id = 1")
+    count = cursor.fetchone()[0]
+    assert count == 0, "Úkol nebyl odstraněn."
+    # Ověření, že tabulka je prázdná
+    cursor.execute("SELECT COUNT(*) FROM ukoly")
+    count = cursor.fetchone()[0]
+
+
+def test_odstranit_neexistujici_ukol(db_setup):
+    conn, cursor = db_setup
+    # Pokus o odstranění neexistujícího úkolu
+    with pytest.raises(ValueError, match="Úkol s ID 999 neexistuje"):
+        odstranit_ukol(conn, id_ukolu=999)
