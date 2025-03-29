@@ -71,6 +71,35 @@ def test_pridat_prazdny_nazev_ukol(db_setup):
     assert count == 0, "Tabulka by měla být prázdná."
 
 
+# def test_pridat_ukol_s_dlouhym_nazvem(db_setup):
+#     conn, cursor = db_setup
+#     # Přidání úkolu s dlouhým názvem
+#     with pytest.raises(mysql.connector.Error):
+#         pridat_ukol(conn, nazev_ukolu="x" * 51, popis_ukolu="Popis1")
+#     # Ověření vložení
+#     cursor.execute("SELECT * FROM ukoly WHERE nazev = %s", ("x" * 51,))
+#     result = cursor.fetchone()
+
+#     assert result is None, "Úkol s příliš dlouhým názvem byl vložen."
+
+
+def test_pridat_ukol_s_dlouhym_nazvem(db_setup):
+    conn,cursor = db_setup
+    with pytest.raises(ValueError, match="Název úkolu je příliš dlouhý"):
+        pridat_ukol(conn, nazev_ukolu="x" * 51, popis_ukolu="Popis1")
+
+
+def test_zobrazit_vsechny_ukoly(db_setup):
+    conn, cursor = db_setup
+    # Přidání několika úkolů
+    for i in range(0, 51):
+        pridat_ukol(conn, nazev_ukolu=f"Ukol{i}", popis_ukolu=f"Popis{i}")
+    # Zobrazení všech úkolů
+    cursor.execute("SELECT * FROM ukoly")
+    ukoly = cursor.fetchall()
+    assert len(ukoly) == 51, "Nesprávný počet úkolů."
+
+
 def test_aktualizovat_ukol(db_setup):
     conn, cursor = db_setup
     # Přidání úkolu pro aktualizaci
