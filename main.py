@@ -51,6 +51,9 @@ def pridat_ukol(conn, nazev_ukolu, popis_ukolu):
         print("Chyba: Název úkolu nesmí být prázdný.")
         return  # nebo: raise ValueError(...)
 
+    if len(nazev_ukolu) > 50:
+        raise ValueError("Název úkolu je příliš dlouhý. Maximálně 50 znaků.")
+
     cursor = conn.cursor()
     try:
         cursor.execute(
