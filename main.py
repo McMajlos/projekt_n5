@@ -68,7 +68,6 @@ def pridat_ukol(conn, nazev_ukolu, popis_ukolu):
 
 def zobrazit_ukoly(conn):
     """Zobrazí úkoly, které mají stav 'Nezahájeno' nebo 'Probíhá'."""
-    print("")
     try:
         cursor = conn.cursor()
         cursor.execute(
@@ -134,8 +133,7 @@ def zobrazit_vsechny_ukoly(conn):
         vysledky = cursor.fetchall()
 
         if len(vysledky) == 0:
-            print("Žádné úkoly nebyly nalezeny. Databáze je prázdná!")
-            return
+            raise ValueError("Žádné úkoly nebyly nalezeny. Databáze je prázdná!")
 
         data = []
         for radek in vysledky:
@@ -188,8 +186,7 @@ def aktualizovat_ukol(conn, id_ukolu, novy_stav):
         cursor.execute("SELECT * FROM ukoly WHERE id = %s", (id_ukolu,))
         ukol = cursor.fetchone()
         if not ukol:
-            print(f"Úkol s ID {id_ukolu} nebyl nalezen.")
-            return
+            raise ValueError(f"Úkol s ID {id_ukolu} neexistuje.")
 
         cursor.execute(
             "UPDATE ukoly SET stav = %s WHERE id = %s",
@@ -211,8 +208,7 @@ def odstranit_ukol(conn, id_ukolu):
         ukol = cursor.fetchone()
 
         if not ukol:
-            print(f"Úkol s ID {id_ukolu} nebyl nalezen.")
-            return
+            raise ValueError(f"Úkol s ID {id_ukolu} neexistuje.")
 
         # Smazání úkolu
         cursor.execute("DELETE FROM ukoly WHERE id = %s", (id_ukolu,))
@@ -272,6 +268,11 @@ def hlavni_menu(conn):
                         id_ukolu = int(
                             input("Zadejte ID úkolu, který chcete aktualizovat: ")
                         )
+                        kontrola = conn.cursor()
+                        kontrola.execute("SELECT id FROM ukoly WHERE id = %s", (id_ukolu,))
+                        if not kontrola.fetchone():
+                            print(f"\nÚkol s ID {id_ukolu} neexistuje.")
+                            return False
                         break
                     except ValueError:
                         print("Neplatný vstup. Zadejte číslo.")
@@ -288,7 +289,10 @@ def hlavni_menu(conn):
                     print("Neplatná volba. Aktualizace zrušena.")
                     return False
 
-                aktualizovat_ukol(conn, id_ukolu, novy_stav)
+                try:
+                   aktualizovat_ukol(conn, id_ukolu, novy_stav)
+                except ValueError as e:
+                    print(e)
 
             elif user_choice_int == 4:
                 # Odstranění úkolu
