@@ -7,12 +7,10 @@ def pripojeni_db():
             host="localhost", user="root", password="engeto", database="engeto"
         )
         print("Připojení k databázi bylo úspěšné.")
+        return conn, conn.cursor()
+
     except mysql.connector.Error as err:
         print(f"Chyba při připojování: {err}")
-
-
-# Použití funkce
-conn, cursor = pripojeni_db()
 
 
 def vytvoreni_tabulky():
@@ -48,14 +46,14 @@ def pridat_ukol():
     while True:
         nazev_ukolu = str(input("Zadejte název úkolu: "))
         if nazev_ukolu.strip() == "":
-            print("Název úkolu nemůže být prázdný.\n")
+            print("Název úkolu nemůže být prázdný.")
         else:
             break
 
     popis_ukolu = str(input("Zadejte popis úkolu: "))
     if popis_ukolu.strip() == "":
         popis_ukolu = "Bez popisu."
-        print("Bez popisu.\n")
+        print("Bez popisu.")
 
     try:
         cursor.execute(
@@ -63,7 +61,7 @@ def pridat_ukol():
             (nazev_ukolu, popis_ukolu),
         )
         conn.commit()
-        print(f"Úkol '{nazev_ukolu}' byl přidán.\n")
+        print(f"Úkol '{nazev_ukolu}' byl přidán.")
     except mysql.connector.Error as err:
         print(f"Chyba při vkládání dat: {err}")
 
@@ -72,7 +70,7 @@ def zobrazit_ukoly():
     """Zobrazí úkoly, které mají stav "Dokončeno" nebo "Probíhá"."""
     try:
         cursor.execute(
-            "SELECT * FROM ukoly1 WHERE stav = 'Dokončeno' OR stav = 'Probíhá'"
+            "SELECT * FROM ukoly1 WHERE stav = 'Nezahájeno' OR stav = 'Probíhá'"
         )
         vysledky = cursor.fetchall()
 
@@ -91,6 +89,8 @@ def zobrazit_ukoly():
 
         hlavicky = ("ID", "Název", "Popis", "Stav", "Vytvořeno")
 
+        print("")
+        print("Zobrazuji úkoly, které mají stav 'Nezahájeno' nebo 'Probíhá':")
         sirky = []
         for sloupec_index in range(len(hlavicky)):
             nejdelsi_delka = len(hlavicky[sloupec_index])
@@ -189,6 +189,8 @@ def aktualizovat_ukol():
             print("Žádné úkoly nebyly nalezeny.")
             return
 
+        print("")
+        print("Zobrazuji všechny úkoly, které jsou v databázi:")
         zobrazit_vsechny_ukoly()
 
         while True:
@@ -209,7 +211,7 @@ def aktualizovat_ukol():
 
         # Výběr nového stavu
         while True:
-            print("\nVyberte nový stav úkolu:")
+            print("Vyberte nový stav úkolu:")
             print("1. Probíhá")
             print("2. Dokončeno")
             volba = input("Zadejte číslo volby: ")
@@ -236,6 +238,7 @@ def aktualizovat_ukol():
 
 
 def odstranit_ukol():
+    print("Zobrazuji všechny úkoly, které jsou v databázi:")
     try:
         cursor.execute("SELECT * FROM ukoly1")
         ukoly = cursor.fetchall()
@@ -275,16 +278,17 @@ def odstranit_ukol():
 
 def hlavni_menu():
     global task_run
+    print("")
     print("Správce úkolů - Hlavní menu")
     print("1. Přidat nový úkol")
-    print("2. Zobrazit všechny úkoly")
+    print("2. Zobrazit úkoly")
     print("3. Aktualizovat úkol")
     print("4. Odstranit úkol")
     print("5. Konec programu")
-    user_choice = input("Vyberte možnost 1-4: ")
+    user_choice = input("Vyberte možnost 1-5: ")
     try:
         user_choice_int = int(user_choice)
-        if 1 <= user_choice_int <= 4:
+        if 1 <= user_choice_int <= 5:
             if user_choice_int == 1:
                 pridat_ukol()
             if user_choice_int == 2:
@@ -295,12 +299,17 @@ def hlavni_menu():
                 odstranit_ukol()
             if user_choice_int == 5:
                 print("Díky za použití mého programu. Ukončuji program.")
+                cursor.close()
+                conn.close()
                 task_run = False
         else:
-            print("Vybral si číslo mimo daný rozsah. Vyber číslo mezi 1 a 4.\n")
+            print("Vybral si číslo mimo daný rozsah. Vyber číslo mezi 1 a 4.")
     except ValueError:
-        print("Nezadal si platné číslo.\n")
+        print("Nezadal si platné číslo.")
 
+
+# Připojení k databázi a vytvoření tabulky
+conn, cursor = pripojeni_db()
 
 task_run = True
 while task_run:
