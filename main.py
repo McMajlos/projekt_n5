@@ -6,16 +6,17 @@ def pripojeni_db():
         conn = mysql.connector.connect(
             host="localhost", user="root", password="engeto", database="engeto"
         )
+        print("=" * 60)
         print("Připojení k databázi bylo úspěšné.")
-        return conn, conn.cursor()
-
+        return conn
     except mysql.connector.Error as err:
         print(f"Chyba při připojování: {err}")
 
 
-def vytvoreni_tabulky():
+def vytvoreni_tabulky(conn):
     """Vytvoří tabulku 'ukoly', pokud ještě neexistuje."""
     try:
+        cursor = conn.cursor()
         cursor.execute("SHOW TABLES LIKE 'ukoly'")
         table_exists = cursor.fetchone()
 
@@ -54,9 +55,11 @@ def pridat_ukol(conn, nazev_ukolu, popis_ukolu):
         print(f"Chyba při vkládání dat: {err}")
 
 
-def zobrazit_ukoly():
-    """Zobrazí úkoly, které mají stav "Dokončeno" nebo "Probíhá"."""
+def zobrazit_ukoly(conn):
+    """Zobrazí úkoly, které mají stav 'Nezahájeno' nebo 'Probíhá'."""
+    print("")
     try:
+        cursor = conn.cursor()
         cursor.execute(
             "SELECT * FROM ukoly WHERE stav = 'Nezahájeno' OR stav = 'Probíhá'"
         )
@@ -111,9 +114,11 @@ def zobrazit_ukoly():
         print("Chyba při načítání dat:", chyba)
 
 
-def zobrazit_vsechny_ukoly():
-    """Zobrazí všechny úkoly v databázi. Používám ve funkci aktualizovat_ukol(), odstranit_ukol()"""
+def zobrazit_vsechny_ukoly(conn):
+    """Zobrazí všechny úkoly v databázi. Používá se ve funkci aktualizovat_ukol(), odstranit_ukol()."""
+    print("")
     try:
+        cursor = conn.cursor()
         cursor.execute("SELECT * FROM ukoly")
         vysledky = cursor.fetchall()
 
@@ -164,49 +169,16 @@ def zobrazit_vsechny_ukoly():
         print("Chyba při načítání dat:", chyba)
 
 
-def aktualizovat_ukol():
-    """Aktualizuje stav úkolu v databázi."""
+def aktualizovat_ukol(conn, id_ukolu, novy_stav):
+    """Aktualizuje stav úkolu v databázi na základě předaného ID a nového stavu."""
     try:
-        cursor.execute("SELECT * FROM ukoly")
-        ukoly = cursor.fetchall()
-
-        if len(ukoly) == 0:
-            print("Žádné úkoly nebyly nalezeny. Databáze je prázdná!")
+        cursor = conn.cursor()
+        # Kontrola, zda úkol s daným ID existuje
+        cursor.execute("SELECT * FROM ukoly WHERE id = %s", (id_ukolu,))
+        ukol = cursor.fetchone()
+        if not ukol:
+            print(f"Úkol s ID {id_ukolu} nebyl nalezen.")
             return
-
-        print("")
-        print("Zobrazuji všechny úkoly, které jsou v databázi:")
-        zobrazit_vsechny_ukoly()
-
-        while True:
-            try:
-                id_ukolu = int(input("Zadejte ID úkolu, který chcete aktualizovat: "))
-            except ValueError:
-                print("Neplatný vstup. Zadejte číslo.")
-                continue
-
-            cursor.execute("SELECT * FROM ukoly WHERE id = %s", (id_ukolu,))
-            ukol = cursor.fetchone()
-
-            if ukol:
-                break
-            else:
-                print(f"Úkol s ID {id_ukolu} nebyl nalezen. Zkuste to znovu.")
-
-        while True:
-            print("Vyberte nový stav úkolu:")
-            print("1. Probíhá")
-            print("2. Dokončeno")
-            volba = input("Zadejte číslo volby: ")
-
-            if volba == "1":
-                novy_stav = "Probíhá"
-                break
-            elif volba == "2":
-                novy_stav = "Dokončeno"
-                break
-            else:
-                print("Neplatná volba. Zkuste to znovu.")
 
         cursor.execute(
             "UPDATE ukoly SET stav = %s WHERE id = %s",
@@ -214,51 +186,33 @@ def aktualizovat_ukol():
         )
         conn.commit()
         print(f"Úkol s ID {id_ukolu} byl aktualizován na stav '{novy_stav}'.")
-
     except mysql.connector.Error as err:
         print(f"Chyba při aktualizaci úkolu: {err}")
 
 
-def odstranit_ukol():
-    """Odstraní úkol z databáze."""
-    print("\nZobrazuji všechny úkoly, které jsou v databázi:")
+def odstranit_ukol(conn, id_ukolu):
+    """Odstraní úkol z databáze na základě ID."""
     try:
-        cursor.execute("SELECT * FROM ukoly")
-        ukoly = cursor.fetchall()
+        cursor = conn.cursor()
 
-        if len(ukoly) == 0:
-            print("Žádné úkoly nebyly nalezeny. Databáze je prázdná!")
+        # Kontrola, jestli úkol s daným ID existuje
+        cursor.execute("SELECT * FROM ukoly WHERE id = %s", (id_ukolu,))
+        ukol = cursor.fetchone()
+
+        if not ukol:
+            print(f"Úkol s ID {id_ukolu} nebyl nalezen.")
             return
 
-        zobrazit_vsechny_ukoly()
-
-        while True:
-            try:
-                id_ukolu = int(input("Zadejte ID úkolu, který chcete odstranit: "))
-            except ValueError:
-                print("Neplatný vstup. Zadejte číslo.")
-                continue
-
-            cursor.execute("SELECT * FROM ukoly WHERE id = %s", (id_ukolu,))
-            ukol = cursor.fetchone()
-
-            if ukol:
-                break
-            else:
-                print(f"Úkol s ID {id_ukolu} nebyl nalezen. Zkuste to znovu.")
-
-        cursor.execute(
-            "DELETE FROM ukoly WHERE id = %s",
-            (id_ukolu,),
-        )
+        # Smazání úkolu
+        cursor.execute("DELETE FROM ukoly WHERE id = %s", (id_ukolu,))
         conn.commit()
         print(f"Úkol s ID {id_ukolu} byl úspěšně odstraněn.")
 
     except mysql.connector.Error as err:
-        print(f"Chyba při aktualizaci úkolu: {err}")
+        print(f"Chyba při odstraňování úkolu: {err}")
 
 
-def hlavni_menu():
+def hlavni_menu(conn):
     """Hlavní menu programu."""
     global task_run
     print("")
@@ -269,48 +223,100 @@ def hlavni_menu():
     print("4. Odstranit úkol")
     print("5. Konec programu")
     user_choice = input("Vyberte možnost 1-5: ")
-    
+
     try:
         user_choice_int = int(user_choice)
         if 1 <= user_choice_int <= 5:
             if user_choice_int == 1:
-                # Získání vstupů od uživatele mimo funkci pro vkládání
                 nazev = input("Zadejte název úkolu: ").strip()
                 while not nazev:
                     print("Název úkolu nemůže být prázdný.")
                     nazev = input("Zadejte název úkolu: ").strip()
-                
+
                 popis = input("Zadejte popis úkolu: ").strip()
                 if not popis:
                     popis = "Bez popisu."
                     print("Používám výchozí hodnotu: 'Bez popisu.'")
-                
-                # Volání funkce pro přidání úkolu s předanými hodnotami
+
                 pridat_ukol(conn, nazev, popis)
-            
+
             elif user_choice_int == 2:
-                zobrazit_ukoly()
+                zobrazit_ukoly(conn)
+
             elif user_choice_int == 3:
-                aktualizovat_ukol()
+                # Nejprve zobrazíme všechny úkoly
+                zobrazit_vsechny_ukoly(conn)
+
+                # Zkontroluj, jestli v databázi vůbec nějaké úkoly jsou
+                cursor = conn.cursor()
+                cursor.execute("SELECT COUNT(*) FROM ukoly")
+                pocet = cursor.fetchone()[0]
+
+                if pocet == 0:
+                    return False  # vracíme zpět do hlavního menu
+
+                # Pokud úkoly existují, pokračuj jako dřív
+                while True:
+                    try:
+                        id_ukolu = int(
+                            input("Zadejte ID úkolu, který chcete aktualizovat: ")
+                        )
+                        break
+                    except ValueError:
+                        print("Neplatný vstup. Zadejte číslo.")
+
+                print("Vyberte nový stav úkolu:")
+                print("1. Probíhá")
+                print("2. Dokončeno")
+                volba = input("Zadejte číslo volby: ")
+                if volba == "1":
+                    novy_stav = "Probíhá"
+                elif volba == "2":
+                    novy_stav = "Dokončeno"
+                else:
+                    print("Neplatná volba. Aktualizace zrušena.")
+                    return False
+
+                aktualizovat_ukol(conn, id_ukolu, novy_stav)
+
             elif user_choice_int == 4:
-                odstranit_ukol()
+                zobrazit_vsechny_ukoly(conn)
+
+                while True:
+                    try:
+                        id_ukolu = int(
+                            input("Zadejte ID úkolu, který chcete odstranit: ")
+                        )
+                        break
+                    except ValueError:
+                        print("Neplatný vstup. Zadejte číslo.")
+
+                odstranit_ukol(conn, id_ukolu)
+
             elif user_choice_int == 5:
                 print("Díky za použití mého programu. Ukončuji program.")
-                cursor.close()
                 conn.close()
-                task_run = False
+                return True
         else:
             print("Vybral sis číslo mimo daný rozsah. Vyber číslo mezi 1 a 5.")
     except ValueError:
         print("Nezadal sis platné číslo.")
 
+    return False
+
 
 if __name__ == "__main__":
     # Připojení k databázi a vytvoření tabulky
-    conn, cursor = pripojeni_db()
-    vytvoreni_tabulky()
+    conn = pripojeni_db()
+    if conn is None:
+        print("Nepodařilo se připojit k databázi. Ukončuji program.")
+        exit(1)
+
+    vytvoreni_tabulky(conn)
 
     # Spuštění hlavního menu
-    task_run = True
-    while task_run:
-        hlavni_menu()
+    while True:
+        konec = hlavni_menu(conn)
+        if konec:
+            conn.close()
+            break
