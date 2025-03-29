@@ -22,6 +22,7 @@ def vytvoreni_tabulky(conn):
 
         if table_exists:
             print("Tabulka 'ukoly' již existuje, není potřeba ji vytvářet.")
+            print("=" * 60)
         else:
             cursor.execute(
                 """
@@ -36,6 +37,7 @@ def vytvoreni_tabulky(conn):
             )
             conn.commit()
             print("Tabulka 'ukoly' byla úspěšně vytvořena.")
+            print("=" * 60)
 
     except mysql.connector.Error as err:
         print(f"Chyba při vytváření tabulky: {err}")
@@ -244,18 +246,15 @@ def hlavni_menu(conn):
                 zobrazit_ukoly(conn)
 
             elif user_choice_int == 3:
-                # Nejprve zobrazíme všechny úkoly
                 zobrazit_vsechny_ukoly(conn)
 
-                # Zkontroluj, jestli v databázi vůbec nějaké úkoly jsou
                 cursor = conn.cursor()
                 cursor.execute("SELECT COUNT(*) FROM ukoly")
                 pocet = cursor.fetchone()[0]
 
                 if pocet == 0:
-                    return False  # vracíme zpět do hlavního menu
+                    return False
 
-                # Pokud úkoly existují, pokračuj jako dřív
                 while True:
                     try:
                         id_ukolu = int(
@@ -281,6 +280,13 @@ def hlavni_menu(conn):
 
             elif user_choice_int == 4:
                 zobrazit_vsechny_ukoly(conn)
+
+                cursor = conn.cursor()
+                cursor.execute("SELECT COUNT(*) FROM ukoly")
+                pocet = cursor.fetchone()[0]
+
+                if pocet == 0:
+                    return False
 
                 while True:
                     try:
