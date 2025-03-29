@@ -51,7 +51,6 @@ def test_pridat_ukol(db_setup):
     # Ověření vložení
     cursor.execute("SELECT * FROM ukoly WHERE nazev = 'Ukol1'")
     result = cursor.fetchone()
-
     assert result is not None, "Záznam nebyl vložen do tabulky."
     assert result[1] == "Ukol1", "Název úkolu není správný."
     assert result[2] == "Popis1", "Popis úkolu není správný."
@@ -61,30 +60,13 @@ def test_pridat_prazdny_nazev_ukol(db_setup):
     conn, cursor = db_setup
     pridat_ukol(conn, nazev_ukolu="", popis_ukolu="Popis1")
     # Ověření vložení
-    cursor.execute("SELECT * FROM ukoly WHERE nazev = 'Ukol1'")
-    result = cursor.fetchone()
-
-    # assert result is None, "Prázdný záznam byl vložen do tabulky."
-    # Ověření, že tabulka je prázdná
     cursor.execute("SELECT COUNT(*) FROM ukoly")
     count = cursor.fetchone()[0]
     assert count == 0, "Tabulka by měla být prázdná."
 
 
-# def test_pridat_ukol_s_dlouhym_nazvem(db_setup):
-#     conn, cursor = db_setup
-#     # Přidání úkolu s dlouhým názvem
-#     with pytest.raises(mysql.connector.Error):
-#         pridat_ukol(conn, nazev_ukolu="x" * 51, popis_ukolu="Popis1")
-#     # Ověření vložení
-#     cursor.execute("SELECT * FROM ukoly WHERE nazev = %s", ("x" * 51,))
-#     result = cursor.fetchone()
-
-#     assert result is None, "Úkol s příliš dlouhým názvem byl vložen."
-
-
 def test_pridat_ukol_s_dlouhym_nazvem(db_setup):
-    conn,cursor = db_setup
+    conn, cursor = db_setup
     with pytest.raises(ValueError, match="Název úkolu je příliš dlouhý"):
         pridat_ukol(conn, nazev_ukolu="x" * 51, popis_ukolu="Popis1")
 
