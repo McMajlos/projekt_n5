@@ -75,7 +75,7 @@ def zobrazit_ukoly():
         vysledky = cursor.fetchall()
 
         if len(vysledky) == 0:
-            print("Žádné úkoly nebyly nalezeny.")
+            print("Žádné úkoly nebyly nalezeny. Databáze je prázdná!")
             return
 
         data = []
@@ -132,7 +132,7 @@ def zobrazit_vsechny_ukoly():
         vysledky = cursor.fetchall()
 
         if len(vysledky) == 0:
-            print("Žádné úkoly nebyly nalezeny.")
+            print("Žádné úkoly nebyly nalezeny. Databáze je prázdná!")
             return
 
         data = []
@@ -186,7 +186,7 @@ def aktualizovat_ukol():
         ukoly = cursor.fetchall()
 
         if len(ukoly) == 0:
-            print("Žádné úkoly nebyly nalezeny.")
+            print("Žádné úkoly nebyly nalezeny. Databáze je prázdná!")
             return
 
         print("")
@@ -238,13 +238,13 @@ def aktualizovat_ukol():
 
 
 def odstranit_ukol():
-    print("Zobrazuji všechny úkoly, které jsou v databázi:")
+    print("\nZobrazuji všechny úkoly, které jsou v databázi:")
     try:
         cursor.execute("SELECT * FROM ukoly1")
         ukoly = cursor.fetchall()
 
         if len(ukoly) == 0:
-            print("Žádné úkoly nebyly nalezeny.")
+            print("Žádné úkoly nebyly nalezeny. Databáze je prázdná!")
             return
 
         zobrazit_vsechny_ukoly()
