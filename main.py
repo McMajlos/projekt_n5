@@ -2,6 +2,8 @@ import mysql.connector
 
 
 def pripojeni_db():
+    print("\033c")
+
     try:
         conn = mysql.connector.connect(
             host="localhost", user="root", password="engeto", database="engeto"
@@ -44,7 +46,11 @@ def vytvoreni_tabulky(conn):
 
 
 def pridat_ukol(conn, nazev_ukolu, popis_ukolu):
-    """Přidá úkol do databáze s již zadanými hodnotami."""
+    """Přidá úkol do databáze s validací."""
+    if not nazev_ukolu.strip():
+        print("Chyba: Název úkolu nesmí být prázdný.")
+        return  # nebo: raise ValueError(...)
+
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -230,6 +236,7 @@ def hlavni_menu(conn):
         user_choice_int = int(user_choice)
         if 1 <= user_choice_int <= 5:
             if user_choice_int == 1:
+                # Přidání nového úkolu
                 nazev = input("Zadejte název úkolu: ").strip()
                 while not nazev:
                     print("Název úkolu nemůže být prázdný.")
@@ -243,9 +250,11 @@ def hlavni_menu(conn):
                 pridat_ukol(conn, nazev, popis)
 
             elif user_choice_int == 2:
+                # Zobrazení úkolů
                 zobrazit_ukoly(conn)
 
             elif user_choice_int == 3:
+                # Aktualizace úkolu
                 zobrazit_vsechny_ukoly(conn)
 
                 cursor = conn.cursor()
@@ -279,6 +288,7 @@ def hlavni_menu(conn):
                 aktualizovat_ukol(conn, id_ukolu, novy_stav)
 
             elif user_choice_int == 4:
+                # Odstranění úkolu
                 zobrazit_vsechny_ukoly(conn)
 
                 cursor = conn.cursor()
@@ -300,6 +310,7 @@ def hlavni_menu(conn):
                 odstranit_ukol(conn, id_ukolu)
 
             elif user_choice_int == 5:
+                # Konec programu
                 print("Díky za použití mého programu. Ukončuji program.")
                 conn.close()
                 return True
