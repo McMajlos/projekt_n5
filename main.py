@@ -73,13 +73,53 @@ def pridat_ukol():
 
 
 def zobrazit_ukoly():
-    if len(ukoly) == 0:
-        print("Seznam úkolů je prázdný. Začněte přidáním úkolu volbou č. 1.\n")
-    else:
-        print(f"\nSeznam úkolů:")
-        for index, ukol in enumerate(ukoly, start=1):
-            print(f"{index}. {ukol}")
-        print("")
+    try:
+        cursor.execute("SELECT * FROM ukoly1 WHERE stav = 'Nezahájeno' OR stav = 'Probíhá'")
+        vysledky = cursor.fetchall()
+
+        if len(vysledky) == 0:
+            print("Žádné úkoly nebyly nalezeny.")
+            return
+
+        data = []
+        for radek in vysledky:
+            idcko = str(radek[0])
+            nazev = str(radek[1])
+            popis = str(radek[2])
+            stav = str(radek[3])
+            datum = radek[4].strftime("%d.%m.%Y %H:%M:%S")
+            data.append((idcko, nazev, popis, stav, datum))
+
+        hlavicky = ("ID", "Název", "Popis", "Stav", "Vytvořeno")
+
+        sirky = []
+        for sloupec_index in range(len(hlavicky)):
+            nejdelsi_delka = len(hlavicky[sloupec_index])
+            for radek in data:
+                delka_hodnoty = len(radek[sloupec_index])
+                if delka_hodnoty > nejdelsi_delka:
+                    nejdelsi_delka = delka_hodnoty
+            sirky.append(nejdelsi_delka)
+
+        hlavicka_radek = ""
+        for nazev_sloupce_index in range(len(hlavicky)):
+            hlavicka_radek += hlavicky[nazev_sloupce_index].ljust(sirky[nazev_sloupce_index]) + " | "
+        print(hlavicka_radek.rstrip(" | "))
+
+        oddelovac = ""
+        for sirka_sloupce in sirky:
+            oddelovac += "-" * sirka_sloupce + "-+-"
+        oddelovac = oddelovac[:-3]
+        print(oddelovac)
+
+        for radek in data:
+            radek_text = ""
+            for hodnota_index in range(len(radek)):
+                radek_text += radek[hodnota_index].ljust(sirky[hodnota_index]) + " | "
+            print(radek_text.rstrip(" | "))
+
+    except mysql.connector.Error as chyba:
+        print("Chyba při načítání dat:", chyba)
 
 
 def odstranit_ukol():
