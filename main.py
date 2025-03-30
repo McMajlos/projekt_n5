@@ -49,7 +49,7 @@ def pridat_ukol(conn, nazev_ukolu, popis_ukolu):
     """Přidá úkol do databáze s validací."""
     if not nazev_ukolu.strip():
         print("Chyba: Název úkolu nesmí být prázdný.")
-        return  # nebo: raise ValueError(...)
+        return
 
     if len(nazev_ukolu) > 50:
         raise ValueError("Název úkolu je příliš dlouhý. Maximálně 50 znaků.")
@@ -182,7 +182,7 @@ def aktualizovat_ukol(conn, id_ukolu, novy_stav):
     """Aktualizuje stav úkolu v databázi na základě předaného ID a nového stavu."""
     try:
         cursor = conn.cursor()
-        # Kontrola, zda úkol s daným ID existuje
+        # Kontrola, jestli úkol s daným ID existuje
         cursor.execute("SELECT * FROM ukoly WHERE id = %s", (id_ukolu,))
         ukol = cursor.fetchone()
         if not ukol:
