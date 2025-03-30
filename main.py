@@ -324,7 +324,7 @@ def hlavni_menu(conn):
         else:
             print("Vybral sis číslo mimo daný rozsah. Vyber číslo mezi 1 a 5.")
     except ValueError:
-        print("Nezadal sis platné číslo.")
+        print("Nezadal si platné číslo.")
 
     return False
 
